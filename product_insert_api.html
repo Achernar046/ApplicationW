@@ -4,14 +4,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบเพิ่มข้อมูลสินค้า - Add Product Form</title>
+    <title>ระบบจัดการข้อมูลสินค้า - Product Management</title>
 
     <!-- Bootstrap 5 CSS CDN -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons CDN -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <!-- Google Fonts: Prompt -->
+    <!-- Google Fonts: Charm -->
     <link href="https://fonts.googleapis.com/css2?family=Charm:wght@400;700&display=swap" rel="stylesheet">
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 
     <style>
         body {
@@ -37,7 +39,13 @@
         .card-header-product {
             background: linear-gradient(135deg, #198754 0%, #146c43 100%);
             color: #ffffff;
-            padding: 1.75rem 1.5rem;
+            padding: 1.5rem;
+        }
+
+        .card-header-table {
+            background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+            color: #ffffff;
+            padding: 1.25rem 1.5rem;
         }
 
         .btn-success-custom {
@@ -59,36 +67,28 @@
             color: #198754;
         }
 
-        .image-preview-box {
-            width: 100%;
-            height: 180px;
-            border: 2px dashed #ced4da;
-            border-radius: 0.75rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: #fafafa;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .image-preview-box img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-
         .backend-error-summary {
             border-left: 4px solid #dc3545;
+        }
+
+        .table-custom thead th {
+            background-color: #f8f9fa;
+            color: #5f0000;
+            font-weight: 700;
+        }
+
+        .table-custom tbody tr:hover {
+            background-color: #fff4f4;
         }
     </style>
 </head>
 
 <body>
 
+    <!-- Navbar เดิม -->
     <nav class="navbar navbar-expand-lg navbar-dark navbar-custom py-3 mb-4">
         <div class="container">
-            <a class="navbar-brand d-flex align-items-center fw-bold fs-4" href="#">
+            <a class="navbar-brand d-flex align-items-center fw-bold fs-4" href="index.html">
                 <i class="bi bi-box-seam-fill me-2 fs-3 text-warning"></i>
                 ระบบจัดการสินค้า (Product Management)
             </a>
@@ -100,9 +100,10 @@
 
     <div class="container pb-5">
         <div class="row justify-content-center">
-            <div class="col-12 col-lg-10 col-xl-9">
+            <div class="col-12 col-lg-11 col-xl-10">
 
-                <div class="card product-card">
+                <!-- ฟอร์มเพิ่ม/แก้ไขข้อมูลสินค้า (UI เดิม) -->
+                <div class="card product-card mb-5" id="formCard">
                     <!-- Form Header -->
                     <div class="card-header-product text-center">
                         <h3 class="fw-bold mb-1"><i class="bi bi-box-seam-fill me-2"></i>ระบบจัดการข้อมูลสินค้า</h3>
@@ -130,6 +131,9 @@
                                 <i class="bi bi-pencil-square me-2 fs-5"></i>
                                 <span>กำลังแก้ไขสินค้า รหัส: <strong id="currentProductIdDisplay">-</strong></span>
                             </div>
+                            <button type="button" class="btn btn-sm btn-outline-dark" onclick="cancelEditMode()">
+                                <i class="bi bi-x-circle me-1"></i>ยกเลิกแก้ไข
+                            </button>
                         </div>
 
                         <!-- HTML Form: ส่งข้อมูลไปยัง process_product.php ด้วย HTTP POST -->
@@ -148,8 +152,8 @@
                                 <div class="input-group has-validation">
                                     <span class="input-group-text"><i class="bi bi-box-seam"></i></span>
                                     <input type="text" class="form-control" id="productName" name="ProductName"
-                                        placeholder="เช่น Smart TV 55 นิ้ว 4K UHD" required minlength="5">
-                                    <div class="invalid-feedback">กรุณาระบุmangoอย่างน้อย 5 mango</div>
+                                        placeholder="เช่น Chang, Chaiss, Smart TV" required minlength="3">
+                                    <div class="invalid-feedback">กรุณาระบุชื่อสินค้าอย่างน้อย 3 ตัวอักษร</div>
                                 </div>
                             </div>
 
@@ -162,10 +166,7 @@
                                     <div class="input-group has-validation">
                                         <span class="input-group-text"><i class="bi bi-building"></i></span>
                                         <select class="form-select" id="supplierId" name="SupplierID" required>
-                                            <option value=0 disabled selected>-- เลือก Supplier --</option>
-                                            <option value=1>SUP001 - บริษัท เอสซีจี เทรดดิ้ง จำกัด</option>
-                                            <option value=2>SUP002 - บริษัท สยามโกลบอลเฮ้าส์ จำกัด</option>
-                                            <option value=3>SUP003 - บริษัท ซีพี ออลล์ จำกัด (มหาชน)</option>
+                                            <option value="" disabled selected>-- กำลังโหลด Supplier --</option>
                                         </select>
                                         <div class="invalid-feedback">กรุณาเลือกผู้จัดจำหน่าย</div>
                                     </div>
@@ -179,10 +180,7 @@
                                     <div class="input-group has-validation">
                                         <span class="input-group-text"><i class="bi bi-grid-fill"></i></span>
                                         <select class="form-select" id="catId" name="CatID" required>
-                                            <option value=0 disabled selected>-- เลือก Category --</option>
-                                            <option value=1>CAT01 - เครื่องใช้ไฟฟ้า (Electronics)</option>
-                                            <option value=2>CAT02 - เครื่องใช้ในบ้าน (Home Appliances)</option>
-                                            <option value=3>CAT03 - อาหารและเครื่องดื่ม (Food & Beverages)</option>
+                                            <option value="" disabled selected>-- กำลังโหลด Category --</option>
                                         </select>
                                         <div class="invalid-feedback">กรุณาเลือกหมวดหมู่สินค้า</div>
                                     </div>
@@ -198,7 +196,7 @@
                                     <div class="input-group has-validation">
                                         <span class="input-group-text"><i class="bi bi-hash"></i></span>
                                         <input type="text" class="form-control" id="unit" name="Unit"
-                                            placeholder="เช่น ชิ้น, เครื่อง" required>
+                                            placeholder="เช่น ชิ้น, กล่อง, ขวด" required>
                                         <div class="invalid-feedback">กรุณาระบุหน่วยนับ</div>
                                     </div>
                                 </div>
@@ -216,16 +214,15 @@
                                     </div>
                                 </div>
 
-                                <!-- 6. จำนวนสต็อกคงเหลือ -->
+                                <!-- 6. จำนวนคงเหลือ -->
                                 <div class="col-md-4">
                                     <label for="quantity" class="form-label fw-semibold">
-                                        จำนวนคงเหลือ (Quantity) <span class="text-danger">*</span>
+                                        จำนวนคงเหลือ (Quantity)
                                     </label>
                                     <div class="input-group has-validation">
                                         <span class="input-group-text"><i class="bi bi-stack"></i></span>
                                         <input type="number" min="0" class="form-control" id="quantity" name="Quantity"
-                                            placeholder="0" value="10" required>
-                                        <div class="invalid-feedback">กรุณาระบุจำนวนสินค้า</div>
+                                            placeholder="0" value="10">
                                     </div>
                                 </div>
                             </div>
@@ -245,11 +242,78 @@
                     </div>
                 </div>
 
+                <!-- ส่วนแสดงผลตาราง ค้นหา และ จัดการข้อมูล (CRUD UI เข้าชุดกัน) -->
+                <div class="card product-card">
+                    <div class="card-header-table d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <h4 class="fw-bold mb-0">
+                            <i class="bi bi-table me-2"></i>รายการสินค้าในระบบ (Northwind Products)
+                        </h4>
+                        <span class="badge bg-light text-dark px-3 py-2 rounded-pill fs-6" id="productsCountBadge">
+                            กำลังโหลด...
+                        </span>
+                    </div>
+
+                    <div class="card-body p-4">
+                        
+                        <!-- ช่องค้นหา และ กรองข้อมูล -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-5">
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                    <input type="text" class="form-control" id="searchKeyword" 
+                                        placeholder="ค้นหาชื่อสินค้า หรือ หน่วยนับ...">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select" id="filterCategory">
+                                    <option value="">-- ทุกหมวดหมู่ --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select" id="filterSupplier">
+                                    <option value="">-- ทุกผู้จัดจำหน่าย --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-1">
+                                <button type="button" class="btn btn-outline-secondary w-100" id="btnResetSearch" title="รีเซ็ตการค้นหา">
+                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- ตารางแสดงสินค้า -->
+                        <div class="table-responsive">
+                            <table class="table table-hover table-custom align-middle" id="productTable">
+                                <thead>
+                                    <tr>
+                                        <th class="text-center" style="width: 70px;">รหัส</th>
+                                        <th>ชื่อสินค้า</th>
+                                        <th>หมวดหมู่</th>
+                                        <th>ผู้จัดจำหน่าย</th>
+                                        <th>หน่วยนับ</th>
+                                        <th class="text-end" style="width: 120px;">ราคา (฿)</th>
+                                        <th class="text-center" style="width: 140px;">จัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="productTableBody">
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4 text-muted">
+                                            <div class="spinner-border spinner-border-sm text-success me-2" role="status"></div>
+                                            กำลังโหลดรายการสินค้า...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
 
-    <!-- Modal แสดงผลสำเร็จฝั่ง Client-Side -->
+    <!-- Modal แสดงผลสำเร็จฝั่ง Client-Side (UI เดิม) -->
     <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content text-center p-4 rounded-4 border-0 shadow">
@@ -281,61 +345,290 @@
 
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+    <!-- Config ฟอร์มเดิม -->
     <script>
         window.formTemplateConfig = {
-            formId: 'productForm',                  // เปลี่ยนให้ตรงกับ id ของ form HTML
-            submitBtnId: 'btnSubmit',           // เปลี่ยนให้ตรงกับปุ่ม submit
-            submitTextId: 'btnSubmitText', // เปลี่ยนให้ตรงกับ text ของปุ่ม
-            submitIconId: 'btnSubmitIcon', // เปลี่ยนให้ตรงกับ icon ของปุ่ม
-            resetBtnId: 'btnReset',                 // เปลี่ยนให้ตรงกับปุ่ม reset
-            idFieldId: 'productId',                 // hidden field สำหรับเก็บ ProductID
-            actionFieldId: 'formAction', // hidden field สำหรับ action insert/update
-            updateBannerId: 'updateStatusBanner', // ถ้ามี banner แสดงสถานะ update
-            currentIdDisplayId: 'currentProductIdDisplay', // label ที่แสดง id ปัจจุบัน
-            errorAlertId: 'serverErrorAlert', // alert สำหรับ error จาก server
-            errorListId: 'serverErrorList', // list ของ error จาก server
-            successModalId: 'successModal', // modal หลักที่แสดงหลังบันทึกสำเร็จ
-            modalResetBtnId: 'modalResetBtn', // ปุ่ม reset ใน modal
-            successTitleId: 'successModalLabel', // id ของหัวข้อ modal
-            successTextId: 'successMessageText', // id ของข้อความใน modal
-            detailsId: 'insertedDetails', // กล่องรายละเอียดที่แสดงใน modal
-            focusFieldId: 'productName', // field ที่ใช้ focus หลัง reset
-            fetchUrl: 'process_product.php', // เปลี่ยนเป็น endpoint backend ของหน้าใหม่
+            formId: 'productForm',
+            submitBtnId: 'btnSubmit',
+            submitTextId: 'btnSubmitText',
+            submitIconId: 'btnSubmitIcon',
+            resetBtnId: 'btnReset',
+            idFieldId: 'productId',
+            actionFieldId: 'formAction',
+            updateBannerId: 'updateStatusBanner',
+            currentIdDisplayId: 'currentProductIdDisplay',
+            errorAlertId: 'serverErrorAlert',
+            errorListId: 'serverErrorList',
+            successModalId: 'successModal',
+            modalResetBtnId: 'modalResetBtn',
+            successTitleId: 'successModalLabel',
+            successTextId: 'successMessageText',
+            detailsId: 'insertedDetails',
+            focusFieldId: 'productName',
+            fetchUrl: 'process_product.php',
             modeLabels: {
-                insert: { // เปลี่ยนข้อความปุ่มและข้อความสำเร็จสำหรับ insert
+                insert: {
                     text: 'บันทึกข้อมูลสินค้า',
                     icon: 'bi bi-cloud-arrow-up-fill me-2',
                     successTitle: 'บันทึกข้อมูลสำเร็จ!'
                 },
-                update: { // เปลี่ยนข้อความปุ่มและข้อความสำเร็จสำหรับ update
+                update: {
                     text: 'อัปเดตข้อมูลสินค้า',
                     icon: 'bi bi-pencil-square me-2',
                     successTitle: 'อัปเดตข้อมูลสำเร็จ!'
                 }
             },
-            renderSuccessDetails: function (result) { // ปรับเนื้อหาที่แสดงใน modal สำเร็จ
+            renderSuccessDetails: function (result) {
                 const id = result && (result.id || result.ID || result.ProductID || result.inserted_id || result.recordId)
                     ? (result.id || result.ID || result.ProductID || result.inserted_id || result.recordId)
                     : '-';
                 const productName = document.getElementById('productName')?.value || '';
 
                 return `
-            <div class="mb-1"><strong>รหัสสินค้า (ProductID):</strong> <span class="badge bg-primary fs-6">#${id}</span></div>
-            <div class="mb-1"><strong>ชื่อสินค้า:</strong> ${productName}</div>
-          `;
+                    <div class="mb-1"><strong>รหัสสินค้า (ProductID):</strong> <span class="badge bg-primary fs-6">#${id}</span></div>
+                    <div class="mb-1"><strong>ชื่อสินค้า:</strong> ${productName}</div>
+                `;
+            },
+            onSuccess: function () {
+                // เมื่อบันทึกหรือแก้ไขสำเร็จ ให้รีโหลดตารางสินค้าทันที
+                loadProducts();
             }
         };
     </script>
 
+    <!-- Scripts เดิมของวิชาเรียน -->
     <script src="js/form_template_reusable.js"></script>
     <script src="js/loaddata.js"></script>
 
+    <!-- Script สำหรับ Search, Filter, Edit, และ Delete ตาราง -->
     <script>
+        let allProducts = [];
+
         document.addEventListener('DOMContentLoaded', function () {
+            // โหลด Dropdown
             loadSelectOptions('api/categories', 'catId', '-- เลือก Category --');
             loadSelectOptions('api/suppliers', 'supplierId', '-- เลือก Supplier --');
+            loadFilterOptions();
+
+            // โหลดตารางสินค้า
+            loadProducts();
+
+            // Event ค้นหา
+            let searchTimer;
+            document.getElementById('searchKeyword').addEventListener('input', function () {
+                clearTimeout(searchTimer);
+                searchTimer = setTimeout(loadProducts, 300);
+            });
+
+            document.getElementById('filterCategory').addEventListener('change', loadProducts);
+            document.getElementById('filterSupplier').addEventListener('change', loadProducts);
+
+            document.getElementById('btnResetSearch').addEventListener('click', function () {
+                document.getElementById('searchKeyword').value = '';
+                document.getElementById('filterCategory').value = '';
+                document.getElementById('filterSupplier').value = '';
+                loadProducts();
+            });
         });
+
+        // โหลดตัวเลือกในตัวกรอง
+        async function loadFilterOptions() {
+            try {
+                const [catRes, supRes] = await Promise.all([
+                    fetch('api/categories').then(r => r.json()),
+                    fetch('api/suppliers').then(r => r.json())
+                ]);
+
+                if (catRes.success && catRes.data) {
+                    const filterCat = document.getElementById('filterCategory');
+                    filterCat.innerHTML = '<option value="">-- ทุกหมวดหมู่ (Category) --</option>';
+                    catRes.data.forEach(c => {
+                        const opt = document.createElement('option');
+                        opt.value = c.id;
+                        opt.textContent = c.name;
+                        filterCat.appendChild(opt);
+                    });
+                }
+
+                if (supRes.success && supRes.data) {
+                    const filterSup = document.getElementById('filterSupplier');
+                    filterSup.innerHTML = '<option value="">-- ทุกผู้จัดจำหน่าย (Supplier) --</option>';
+                    supRes.data.forEach(s => {
+                        const opt = document.createElement('option');
+                        opt.value = s.id;
+                        opt.textContent = s.name;
+                        filterSup.appendChild(opt);
+                    });
+                }
+            } catch (err) {
+                console.error('Error loading filter options:', err);
+            }
+        }
+
+        // โหลดข้อมูลสินค้าและแสดงในตาราง
+        async function loadProducts() {
+            const keyword = document.getElementById('searchKeyword').value.trim();
+            const catId = document.getElementById('filterCategory').value;
+            const supId = document.getElementById('filterSupplier').value;
+
+            const params = new URLSearchParams();
+            if (keyword) params.append('q', keyword);
+            if (catId) params.append('category_id', catId);
+            if (supId) params.append('supplier_id', supId);
+
+            try {
+                const res = await fetch(`api/products?${params.toString()}`);
+                const result = await res.json();
+
+                const tbody = document.getElementById('productTableBody');
+                const badge = document.getElementById('productsCountBadge');
+
+                if (result.success && Array.isArray(result.data)) {
+                    allProducts = result.data;
+                    badge.textContent = `${allProducts.length} รายการ`;
+
+                    if (allProducts.length === 0) {
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="7" class="text-center py-4 text-muted">
+                                    <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                                    ไม่พบรายการสินค้าที่ค้นหา
+                                </td>
+                            </tr>
+                        `;
+                        return;
+                    }
+
+                    tbody.innerHTML = '';
+                    allProducts.forEach(p => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td class="text-center fw-bold">#${p.id}</td>
+                            <td><strong class="text-dark">${escapeHtml(p.name)}</strong></td>
+                            <td><span class="badge bg-primary-subtle text-primary border px-2 py-1">${escapeHtml(p.category_name)}</span></td>
+                            <td class="small text-muted">${escapeHtml(p.supplier_name)}</td>
+                            <td>${escapeHtml(p.unit)}</td>
+                            <td class="text-end fw-bold text-success">฿${Number(p.price).toFixed(2)}</td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-warning text-dark me-1" onclick="editProduct(${p.id})" title="แก้ไข">
+                                    <i class="bi bi-pencil-square"></i> แก้ไข
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteProduct(${p.id}, '${escapeJs(p.name)}')" title="ลบ">
+                                    <i class="bi bi-trash"></i> ลบ
+                                </button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            } catch (err) {
+                console.error('Error fetching products:', err);
+            }
+        }
+
+        // ฟังก์ชันกด "แก้ไข": นำข้อมูลขึ้นไปใส่ในฟอร์มด้านบน แล้วเปลี่ยนเป็น Update Mode
+        function editProduct(id) {
+            const product = allProducts.find(p => p.id === id);
+            if (!product) return;
+
+            // นำข้อมูลกรอกใส่ในฟอร์ม
+            document.getElementById('productId').value = product.id;
+            document.getElementById('formAction').value = 'update';
+            document.getElementById('productName').value = product.name;
+            document.getElementById('supplierId').value = product.supplier_id;
+            document.getElementById('catId').value = product.category_id;
+            document.getElementById('unit').value = product.unit;
+            document.getElementById('price').value = product.price;
+
+            // แสดง Update Status Banner
+            const banner = document.getElementById('updateStatusBanner');
+            if (banner) {
+                banner.classList.remove('d-none');
+                document.getElementById('currentProductIdDisplay').textContent = `#${product.id}`;
+            }
+
+            // เปลี่ยนปุ่ม Submit เป็นสีเหลืองโหมดอัปเดต
+            const btnSubmit = document.getElementById('btnSubmit');
+            const btnSubmitText = document.getElementById('btnSubmitText');
+            const btnSubmitIcon = document.getElementById('btnSubmitIcon');
+            if (btnSubmit && btnSubmitText && btnSubmitIcon) {
+                btnSubmit.className = 'btn btn-warning px-5 fw-bold text-dark';
+                btnSubmitIcon.className = 'bi bi-pencil-square me-2';
+                btnSubmitText.textContent = 'อัปเดตข้อมูลสินค้า';
+            }
+
+            // เลื่อนจอไปที่ฟอร์มด้านบน
+            document.getElementById('formCard').scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('productName').focus();
+        }
+
+        // ยกเลิกแก้ไข กลับสู่โหมดเพิ่มปกติ
+        function cancelEditMode() {
+            document.getElementById('btnReset').click();
+        }
+
+        // ฟังก์ชันลบสินค้า (Delete)
+        function deleteProduct(id, name) {
+            Swal.fire({
+                title: 'ยืนยันการลบสินค้า?',
+                html: `คุณต้องการลบสินค้า <strong>${escapeHtml(name)}</strong> (รหัส #${id}) หรือไม่?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'ใช่, ลบเลย',
+                cancelButtonText: 'ยกเลิก',
+                reverseButtons: true
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const res = await fetch(`api/products/${id}`, {
+                            method: 'DELETE',
+                            headers: { 'Accept': 'application/json' }
+                        });
+                        const data = await res.json();
+
+                        if (res.ok && data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'ลบสำเร็จ!',
+                                text: data.message || 'ลบข้อมูลสินค้าเรียบร้อยแล้ว',
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
+                            loadProducts();
+                        } else if (res.status === 409) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'ไม่สามารถลบได้',
+                                text: data.message || 'เนื่องจากมีรายการสั่งซื้อที่อ้างอิงถึงสินค้านี้'
+                            });
+                        } else {
+                            throw new Error(data.message || 'ลบไม่สำเร็จ');
+                        }
+                    } catch (e) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'เกิดข้อผิดพลาด',
+                            text: e.message
+                        });
+                    }
+                }
+            });
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
+
+        function escapeJs(str) {
+            if (!str) return '';
+            return String(str).replace(/'/g, "\\'").replace(/"/g, '\\"');
+        }
     </script>
 
 </body>
