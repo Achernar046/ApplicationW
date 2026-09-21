@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบเพิ่มข้อมูลสินค้า - Add Product Form</title>
+
+    <!-- Bootstrap 5 CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Google Fonts: Prompt -->
+    <link href="https://fonts.googleapis.com/css2?family=Charm:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Charm', sans-serif;
+            background-color: #fff9f9;
+            color: #5f0000;
+            min-height: 100vh;
+        }
+
+        .navbar-custom {
+            background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.15);
+        }
+
+        .product-card {
+            border: none;
+            border-radius: 1rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            background-color: #ffffff;
+        }
+
+        .card-header-product {
+            background: linear-gradient(135deg, #198754 0%, #146c43 100%);
+            color: #ffffff;
+            padding: 1.75rem 1.5rem;
+        }
+
+        .btn-success-custom {
+            background: linear-gradient(135deg, #198754 0%, #146c43 100%);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-weight: 500;
+            border-radius: 0.5rem;
+            transition: all 0.25s ease;
+        }
+
+        .btn-success-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(25, 135, 84, 0.3);
+        }
+
+        .input-group-text {
+            background-color: #f8f9fa;
+            color: #198754;
+        }
+
+        .image-preview-box {
+            width: 100%;
+            height: 180px;
+            border: 2px dashed #ced4da;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #fafafa;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .image-preview-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .backend-error-summary {
+            border-left: 4px solid #dc3545;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom py-3 mb-4">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center fw-bold fs-4" href="#">
+                <i class="bi bi-box-seam-fill me-2 fs-3 text-warning"></i>
+                ระบบจัดการสินค้า (Product Management)
+            </a>
+            <span class="badge bg-light text-dark px-3 py-2 rounded-pill fw-normal">
+                <i class="bi bi-hdd-network me-1 text-primary"></i> Server-Side Processing (PHP / API)
+            </span>
+        </div>
+    </nav>
+
+    <div class="container pb-5">
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-10 col-xl-9">
+
+                <div class="card product-card">
+                    <!-- Form Header -->
+                    <div class="card-header-product text-center">
+                        <h3 class="fw-bold mb-1"><i class="bi bi-box-seam-fill me-2"></i>ระบบจัดการข้อมูลสินค้า</h3>
+                        <p class="mb-0 text-white-50">
+                            กรอกรายละเอียดสินค้าเพื่อส่งข้อมูลไปประมวลผลและบันทึกลงฐานข้อมูลที่ Server-Side</p>
+                    </div>
+
+                    <!-- Form Body -->
+                    <div class="card-body p-4 p-md-5">
+
+                        <!-- Server Error Alert Container -->
+                        <div id="serverErrorAlert"
+                            class="alert alert-danger backend-error-summary d-none fade show rounded-3 mb-4"
+                            role="alert">
+                            <h6 class="fw-bold mb-1"><i class="bi bi-exclamation-triangle-fill me-2"></i>พบข้อผิดพลาดจาก
+                                Server (Back-End Validation)</h6>
+                            <ul id="serverErrorList" class="mb-0 ps-3 small"></ul>
+                        </div>
+
+                        <!-- Update Status Banner -->
+                        <div id="updateStatusBanner"
+                            class="alert alert-warning d-none fade show rounded-3 mb-4 d-flex align-items-center justify-content-between"
+                            role="alert">
+                            <div>
+                                <i class="bi bi-pencil-square me-2 fs-5"></i>
+                                <span>กำลังแก้ไขสินค้า รหัส: <strong id="currentProductIdDisplay">-</strong></span>
+                            </div>
+                        </div>
+
+                        <!-- HTML Form: ส่งข้อมูลไปยัง process_product.php ด้วย HTTP POST -->
+                        <form id="productForm" action="process_product.php" method="POST" class="needs-validation"
+                            novalidate>
+
+                            <!-- Hidden Product ID & Action Field for Update Mode -->
+                            <input type="hidden" id="productId" name="ProductID" value="">
+                            <input type="hidden" id="formAction" name="action" value="insert">
+
+                            <!-- 1. ชื่อสินค้า -->
+                            <div class="mb-3">
+                                <label for="productName" class="form-label fw-semibold">
+                                    ชื่อสินค้า (ProductName) <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group has-validation">
+                                    <span class="input-group-text"><i class="bi bi-box-seam"></i></span>
+                                    <input type="text" class="form-control" id="productName" name="ProductName"
+                                        placeholder="เช่น Smart TV 55 นิ้ว 4K UHD" required minlength="5">
+                                    <div class="invalid-feedback">กรุณาระบุmangoอย่างน้อย 5 mango</div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <!-- 2. ผู้จัดจำหน่าย -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="supplierId" class="form-label fw-semibold">
+                                        ผู้จัดจำหน่าย (SupplierID) <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group has-validation">
+                                        <span class="input-group-text"><i class="bi bi-building"></i></span>
+                                        <select class="form-select" id="supplierId" name="SupplierID" required>
+                                            <option value=0 disabled selected>-- เลือก Supplier --</option>
+                                            <option value=1>SUP001 - บริษัท เอสซีจี เทรดดิ้ง จำกัด</option>
+                                            <option value=2>SUP002 - บริษัท สยามโกลบอลเฮ้าส์ จำกัด</option>
+                                            <option value=3>SUP003 - บริษัท ซีพี ออลล์ จำกัด (มหาชน)</option>
+                                        </select>
+                                        <div class="invalid-feedback">กรุณาเลือกผู้จัดจำหน่าย</div>
+                                    </div>
+                                </div>
+
+                                <!-- 3. หมวดหมู่สินค้า -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="catId" class="form-label fw-semibold">
+                                        หมวดหมู่สินค้า (CatID) <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group has-validation">
+                                        <span class="input-group-text"><i class="bi bi-grid-fill"></i></span>
+                                        <select class="form-select" id="catId" name="CatID" required>
+                                            <option value=0 disabled selected>-- เลือก Category --</option>
+                                            <option value=1>CAT01 - เครื่องใช้ไฟฟ้า (Electronics)</option>
+                                            <option value=2>CAT02 - เครื่องใช้ในบ้าน (Home Appliances)</option>
+                                            <option value=3>CAT03 - อาหารและเครื่องดื่ม (Food & Beverages)</option>
+                                        </select>
+                                        <div class="invalid-feedback">กรุณาเลือกหมวดหมู่สินค้า</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-4">
+                                <!-- 4. หน่วยนับ -->
+                                <div class="col-md-4 mb-3 mb-md-0">
+                                    <label for="unit" class="form-label fw-semibold">
+                                        หน่วยนับ (Unit) <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group has-validation">
+                                        <span class="input-group-text"><i class="bi bi-hash"></i></span>
+                                        <input type="text" class="form-control" id="unit" name="Unit"
+                                            placeholder="เช่น ชิ้น, เครื่อง" required>
+                                        <div class="invalid-feedback">กรุณาระบุหน่วยนับ</div>
+                                    </div>
+                                </div>
+
+                                <!-- 5. ราคา -->
+                                <div class="col-md-4 mb-3 mb-md-0">
+                                    <label for="price" class="form-label fw-semibold">
+                                        ราคาสินค้า (Price) <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group has-validation">
+                                        <span class="input-group-text">฿</span>
+                                        <input type="number" step="0.01" min="0" class="form-control" id="price"
+                                            name="Price" placeholder="0.00" required>
+                                        <div class="invalid-feedback">กรุณาระบุราคาตั้งแต่ 0 ขึ้นไป</div>
+                                    </div>
+                                </div>
+
+                                <!-- 6. จำนวนสต็อกคงเหลือ -->
+                                <div class="col-md-4">
+                                    <label for="quantity" class="form-label fw-semibold">
+                                        จำนวนคงเหลือ (Quantity) <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group has-validation">
+                                        <span class="input-group-text"><i class="bi bi-stack"></i></span>
+                                        <input type="number" min="0" class="form-control" id="quantity" name="Quantity"
+                                            placeholder="0" value="10" required>
+                                        <div class="invalid-feedback">กรุณาระบุจำนวนสินค้า</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <button type="button" class="btn btn-outline-secondary px-4 me-md-2" id="btnReset">
+                                    <i class="bi bi-arrow-counterclockwise me-1"></i>ล้างข้อมูล / เพิ่มใหม่
+                                </button>
+                                <button type="submit" class="btn btn-success btn-success-custom px-5" id="btnSubmit">
+                                    <i class="bi bi-cloud-arrow-up-fill me-2" id="btnSubmitIcon"></i><span
+                                        id="btnSubmitText">บันทึกข้อมูลสินค้า</span>
+                                </button>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal แสดงผลสำเร็จฝั่ง Client-Side -->
+    <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content text-center p-4 rounded-4 border-0 shadow">
+                <div class="modal-body">
+                    <div class="text-success mb-3" id="modalIconContainer">
+                        <i class="bi bi-check-circle-fill display-1"></i>
+                    </div>
+                    <h4 class="modal-title fw-bold mb-2" id="successModalLabel">ดำเนินการสำเร็จ!</h4>
+                    <p class="text-muted mb-3" id="successMessageText">
+                        บันทึกข้อมูลสินค้าเรียบร้อยแล้ว
+                    </p>
+
+                    <div class="bg-light p-3 rounded-3 text-start small mb-4 border" id="insertedDetails">
+                        <!-- Content Injected via JS -->
+                    </div>
+
+                    <button type="button" class="btn btn-success px-5 py-2 rounded-3 fw-medium" data-bs-dismiss="modal"
+                        id="modalOkBtn">
+                        <i class="bi bi-check-lg me-1"></i>ตกลง (OK)
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary px-4 py-2 rounded-3 fw-medium ms-2"
+                        data-bs-dismiss="modal" id="modalResetBtn">
+                        <i class="bi bi-plus-lg me-1"></i>เพิ่มสินค้าใหม่
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        window.formTemplateConfig = {
+            formId: 'productForm',                  // เปลี่ยนให้ตรงกับ id ของ form HTML
+            submitBtnId: 'btnSubmit',           // เปลี่ยนให้ตรงกับปุ่ม submit
+            submitTextId: 'btnSubmitText', // เปลี่ยนให้ตรงกับ text ของปุ่ม
+            submitIconId: 'btnSubmitIcon', // เปลี่ยนให้ตรงกับ icon ของปุ่ม
+            resetBtnId: 'btnReset',                 // เปลี่ยนให้ตรงกับปุ่ม reset
+            idFieldId: 'productId',                 // hidden field สำหรับเก็บ ProductID
+            actionFieldId: 'formAction', // hidden field สำหรับ action insert/update
+            updateBannerId: 'updateStatusBanner', // ถ้ามี banner แสดงสถานะ update
+            currentIdDisplayId: 'currentProductIdDisplay', // label ที่แสดง id ปัจจุบัน
+            errorAlertId: 'serverErrorAlert', // alert สำหรับ error จาก server
+            errorListId: 'serverErrorList', // list ของ error จาก server
+            successModalId: 'successModal', // modal หลักที่แสดงหลังบันทึกสำเร็จ
+            modalResetBtnId: 'modalResetBtn', // ปุ่ม reset ใน modal
+            successTitleId: 'successModalLabel', // id ของหัวข้อ modal
+            successTextId: 'successMessageText', // id ของข้อความใน modal
+            detailsId: 'insertedDetails', // กล่องรายละเอียดที่แสดงใน modal
+            focusFieldId: 'productName', // field ที่ใช้ focus หลัง reset
+            fetchUrl: 'process_product.php', // เปลี่ยนเป็น endpoint backend ของหน้าใหม่
+            modeLabels: {
+                insert: { // เปลี่ยนข้อความปุ่มและข้อความสำเร็จสำหรับ insert
+                    text: 'บันทึกข้อมูลสินค้า',
+                    icon: 'bi bi-cloud-arrow-up-fill me-2',
+                    successTitle: 'บันทึกข้อมูลสำเร็จ!'
+                },
+                update: { // เปลี่ยนข้อความปุ่มและข้อความสำเร็จสำหรับ update
+                    text: 'อัปเดตข้อมูลสินค้า',
+                    icon: 'bi bi-pencil-square me-2',
+                    successTitle: 'อัปเดตข้อมูลสำเร็จ!'
+                }
+            },
+            renderSuccessDetails: function (result) { // ปรับเนื้อหาที่แสดงใน modal สำเร็จ
+                const id = result && (result.id || result.ID || result.ProductID || result.inserted_id || result.recordId)
+                    ? (result.id || result.ID || result.ProductID || result.inserted_id || result.recordId)
+                    : '-';
+                const productName = document.getElementById('productName')?.value || '';
+
+                return `
+            <div class="mb-1"><strong>รหัสสินค้า (ProductID):</strong> <span class="badge bg-primary fs-6">#${id}</span></div>
+            <div class="mb-1"><strong>ชื่อสินค้า:</strong> ${productName}</div>
+          `;
+            }
+        };
+    </script>
+
+    <script src="js/form_template_reusable.js"></script>
+    <script src="js/loaddata.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            loadSelectOptions('api/categories', 'catId', '-- เลือก Category --');
+            loadSelectOptions('api/suppliers', 'supplierId', '-- เลือก Supplier --');
+        });
+    </script>
+
+</body>
+
+</html>
