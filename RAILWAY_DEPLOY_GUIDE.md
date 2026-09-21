@@ -50,11 +50,11 @@
    git commit -m "Initial commit: Northwind CRUD Web App with API"
    ```
 
-3. สร้าง Repository ใหม่บน GitHub (เช่นชื่อ `northwind-product-app`) แบบ Public หรือ Private ก็ได้
-4. เชื่อมต่อและ Push ขึ้น GitHub:
+3. Repository บน GitHub ของคุณ:
+   `https://github.com/Achernar046/ApplicationW.git`
+4. โค้ดทั้งหมดได้ถูก Push ขึ้น Branch `main` เรียบร้อยแล้ว:
    ```bash
-   git remote add origin https://github.com/<USERNAME>/northwind-product-app.git
-   git branch -M main
+   git remote add origin https://github.com/Achernar046/ApplicationW.git
    git push -u origin main
    ```
 
